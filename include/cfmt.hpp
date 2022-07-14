@@ -58,9 +58,15 @@ namespace cfmt {
             ref out;
         };
 
+        static void append_rest(format_ctx ctx) {
+            adapter.append(ctx.out, adapter.substr(ctx.i, adapter.size(ctx.tstr) - 1, ctx.tstr));
+        }
+
         static void format(format_ctx ctx) {
             if (adapter.find(ctx.sign, ctx.i, ctx.tstr) != -1)
                 throw std::out_of_range("Not enough args given");
+            else
+                append_rest(ctx);
         }
 
         template <typename T, typename... args_t>
@@ -77,6 +83,9 @@ namespace cfmt {
                 ctx.i = pos + adapter.size(ctx.sign);
                 if (ctx.i < adapter.size(ctx.tstr))
                     format(ctx, args...);
+            }
+            else {
+                append_rest(ctx);
             }
         }
 
@@ -110,7 +119,7 @@ namespace cfmt {
                 return str.size();
             }
 
-            [[nodiscard]] auto to_string(const string_t& any) const {
+            [[nodiscard]] auto to_string(const auto& any) const {
                 builder_t str;
                 str << any;
 
