@@ -58,10 +58,6 @@ namespace cfmt {
             ref out;
         };
 
-        static void append_rest(format_ctx ctx) {
-            adapter.append(ctx.out, adapter.substr(ctx.i, adapter.size(ctx.tstr) - 1, ctx.tstr));
-        }
-
         static void format(format_ctx ctx) {
             if (adapter.find(ctx.sign, ctx.i, ctx.tstr) != -1)
                 throw std::out_of_range("Not enough args given");
@@ -72,21 +68,24 @@ namespace cfmt {
         template <typename T, typename... args_t>
         static void format(format_ctx ctx, const T& val, const args_t&... args) {
             auto pos = adapter.find(ctx.sign, ctx.i, ctx.tstr);
-
-            if (pos != -1) {
-                if (pos != ctx.i)
-                    adapter.append(ctx.out, adapter.substr(ctx.i, pos - 1, ctx.tstr));
-
-                adapter.append(ctx.out, adapter.to_string(val));
-
-                // Launch recursion
-                ctx.i = pos + adapter.size(ctx.sign);
-                if (ctx.i < adapter.size(ctx.tstr))
-                    format(ctx, args...);
-            }
-            else {
+            if (pos == -1) {
                 append_rest(ctx);
+                return;
             }
+
+            if (pos != ctx.i)
+                adapter.append(ctx.out, adapter.substr(ctx.i, pos - 1, ctx.tstr));
+
+            adapter.append(ctx.out, adapter.to_string(val));
+
+            // Launch recursion
+            ctx.i = pos + adapter.size(ctx.sign);
+            if (ctx.i < adapter.size(ctx.tstr))
+                format(ctx, args...);
+        }
+
+        static void append_rest(format_ctx ctx) {
+            adapter.append(ctx.out, adapter.substr(ctx.i, adapter.size(ctx.tstr) - 1, ctx.tstr));
         }
 
         string_t sign_;
