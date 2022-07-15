@@ -61,8 +61,8 @@ namespace cfmt {
         static void format(format_ctx ctx) {
             if (adapter.find(ctx.sign, ctx.i, ctx.tstr) != -1)
                 throw std::out_of_range("Not enough args given");
-            else
-                append_rest(ctx);
+
+            append_rest(ctx);
         }
 
         template <typename T, typename... args_t>
