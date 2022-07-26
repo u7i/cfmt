@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(cfmt VERSION 0.1)
+project(cfmt VERSION 0.2)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -11,9 +11,11 @@ add_library(cfmt INTERFACE
         include/cfmt/view.hpp
         include/cfmt/cfmt.hpp
         include/cfmt/formatter.hpp
-        include/cfmt/group/bad_match.hpp
+        include/cfmt/group/bad_match_access.hpp
         include/cfmt/group/match.hpp
         include/cfmt/group/blueprint.hpp
+        include/cfmt/string.hpp
+        include/cfmt/group/cache.hpp
         )
 
 target_include_directories(cfmt INTERFACE include/)
@@ -28,10 +30,12 @@ configure_file(cfmt.pc.in cfmt.pc @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/cfmt.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
 
 # Setup tests
-add_executable(cfmt_formatter test/formatter.cpp test/base.hpp)
-add_executable(cfmt_view test/view.cpp test/base.hpp)
-add_executable(cfmt_group test/group.cpp test/base.hpp)
+add_executable(formatter test/formatter.cpp test/base.hpp)
+add_executable(view test/view.cpp test/base.hpp)
+add_executable(group test/group.cpp test/base.hpp)
+add_executable(general test/general.cpp test/base.hpp)
 
-target_link_libraries(cfmt_formatter cfmt)
-target_link_libraries(cfmt_view cfmt)
-target_link_libraries(cfmt_group cfmt)
+target_link_libraries(formatter cfmt)
+target_link_libraries(view cfmt)
+target_link_libraries(group cfmt)
+target_link_libraries(general cfmt)

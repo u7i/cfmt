@@ -1,7 +1,7 @@
 // Created by u7i
 #pragma once
 
-#include "bad_match.hpp"
+#include "bad_match_access.hpp"
 #include "cfmt/view.hpp"
 
 #include <cstring>
@@ -34,7 +34,7 @@ namespace cfmt::group {
     private:
         const auto& safe_data(bool additional_cond = true) const {
             if (!data_ || !additional_cond)
-                throw bad_match();
+                throw bad_match_access();
 
             return data_.value();
         }

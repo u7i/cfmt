@@ -15,8 +15,8 @@ int main() {
     section("group-less");
     {
         test_case("group-less", !bp.extract(groupless).valid());
-        test_exception<bad_match>("group-less id access", [&] { (void) bp.extract(groupless).id(); });
-        test_exception<bad_match>(R"(group-less "is anonymous" access)",[&] { (void) bp.extract(groupless).anonymous(); });
+        test_exception<bad_match_access>("group-less id access", [&] { (void) bp.extract(groupless).id(); });
+        test_exception<bad_match_access>(R"(group-less "is anonymous" access)", [&] { (void) bp.extract(groupless).anonymous(); });
     }
 
     section("anonymous group");
