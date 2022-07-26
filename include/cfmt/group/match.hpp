@@ -1,12 +1,12 @@
 // Created by u7i
 #pragma once
 
-#include "exceptions.hpp"
+#include "bad_match.hpp"
 #include "cfmt/view.hpp"
 
 #include <cstring>
 
-namespace cfmt::sign {
+namespace cfmt::group {
     template <typename string> requires Indexable<string>
     struct match {
         using size_type = typename string::size_type;
@@ -17,37 +17,19 @@ namespace cfmt::sign {
             data_ = std::nullopt;
         }
         match(const_reference prefix, const_reference suffix, const_reference id = {}) noexcept {
-            data_ = data_t {
+            data_ = {
                 .prefix = prefix,
                 .suffix = suffix,
                 .id = id
             };
         }
 
-        [[nodiscard]] auto valid() const noexcept -> bool
-        {
-            return data_.has_value();
-        }
+        [[nodiscard]] auto valid()     const noexcept -> bool { return data_.has_value(); }
+        [[nodiscard]] auto anonymous() const          -> bool { return safe_data().id.empty(); }
 
-        [[nodiscard]] auto prefix() const -> view_type
-        {
-            return safe_data().prefix;
-        }
-
-        [[nodiscard]] auto suffix() const -> view_type
-        {
-            return safe_data().suffix;
-        }
-
-        [[nodiscard]] auto anonymous() const -> bool
-        {
-            return safe_data().id.empty();
-        }
-
-        [[nodiscard]] auto id() const -> view_type
-        {
-            return safe_data(!anonymous()).id;
-        }
+        [[nodiscard]] auto prefix()    const -> view_type { return safe_data().prefix; }
+        [[nodiscard]] auto suffix()    const -> view_type { return safe_data().suffix; }
+        [[nodiscard]] auto id()        const -> view_type { return safe_data(!anonymous()).id; }
 
     private:
         const auto& safe_data(bool additional_cond = true) const {

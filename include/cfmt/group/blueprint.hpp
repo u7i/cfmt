@@ -3,7 +3,7 @@
 
 #include "match.hpp"
 
-namespace cfmt::sign {
+namespace cfmt::group {
     template <typename string> requires Indexable<string>
     struct blueprint {
         using match_type = match<string>;

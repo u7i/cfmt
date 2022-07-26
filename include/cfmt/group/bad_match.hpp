@@ -3,7 +3,7 @@
 
 #include <exception>
 
-namespace cfmt::sign {
+namespace cfmt::group {
     struct bad_match : public std::exception {
         [[nodiscard]] auto what() const noexcept -> const char* final
         {
