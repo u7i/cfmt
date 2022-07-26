@@ -1,36 +1,119 @@
 // Created by u7i.
 
 #include "view.hpp"
+#include "string.hpp"
+#include "group/cache.hpp"
 #include "group/blueprint.hpp"
 
 namespace cfmt {
     /**
      * String formatter facade.
-     * \details Requires only string
+     * \details Requires only string that compatible with String concept.
      *
-     * @tparam string T
+     * @tparam string String type.
      */
-    template <typename string> requires Indexable<string>
+    template <typename string> requires String<string>
     struct formatter {
-        using view_type   = typename adapter_t::view_type;
-        using string_type = typename adapter_t::string_type;
+        using blueprint_type = group::blueprint<string>;
+        using cache_type = group::cache<string>;
+        using view_type = view<string>;
 
-        formatter(string_type group) {
-            // Try to parse group
+        formatter(const blueprint_type& bp) noexcept : blueprint_(bp) {}
+
+        /** Set new group blueprint. */
+        void set_blueprint(const blueprint_type& bp) noexcept {
+            blueprint_ = bp;
         }
-        ~formatter() = default;
 
-        [[nodiscard]] auto group() const noexcept -> const string_type& { return group_; }; ///< Get the current group.
+        /** Get the current group blueprint. */
+        [[nodiscard]] auto blueprint() const noexcept -> const blueprint_type&
+        {
+            return blueprint_;
+        };
 
         /** Format template string with the args. */
         template <typename... args_t>
-        auto operator()(const auto& tstr, const args_t&... args) const {
-            auto impl = details::formatter_impl<view_type, string_type, group_type> {group_, view_type { tstr }};
-            return impl.run(std::forward<const args_t&>(args)...).wrapped();
+        auto operator()(const string& tstr, const args_t&... args) const {
+            string out;
+            cache_type cache;
+
+            format({
+                .tstr = tstr,
+                .cache = cache,
+                .out = out
+            }, std::forward<const args_t&>(args)...);
+
+            return out.wrapped();
         }
 
     private:
+        struct context {
+            view_type tstr;
+            cache_type& cache;
+            string& out;
+        };
 
+        void format(context ctx) const {
+            auto match = blueprint_.extract(ctx.tstr);
 
+            if (match.valid()) {
+                if (match.anonymous())
+                    throw std::out_of_range("Not enough args given");
+
+                auto cached = ctx.cache.find(match.id());
+                if (!cached)
+                    throw std::out_of_range("Not enough args given");
+
+                ctx.out.append_block(match.prefix());
+                ctx.out.append_block(cached.value());
+
+                ctx.tstr = match.suffix();
+
+                format(ctx);
+                return;
+            }
+
+            if (!ctx.tstr.empty())
+                ctx.out.append_block(ctx.tstr);
+        }
+
+        template <typename T, typename... args>
+        void format(context ctx, const T& val, const args&... tail) const {
+            auto match = blueprint_.extract(ctx.tstr);
+
+            if (match.valid()) {
+                ctx.out.append_block(match.prefix());
+
+                if (match.anonymous()) {
+                    ctx.out.append_value(val);
+                }
+                else {
+                    auto cached = ctx.cache.find(match.id());
+
+                    if (cached) {
+                        ctx.out.append_block(cached.value());
+
+                        ctx.tstr = match.suffix();
+                        format(ctx, std::forward<const T&>(val), std::forward<const args&>(tail)...);
+
+                        return;
+                    }
+                    else {
+                        const auto old = ctx.out.length();
+                        ctx.out.append_value(val);
+                        ctx.cache.push(match.id(), view_type { old, ctx.out.length() - old, ctx.out });
+                    }
+                }
+
+                ctx.tstr = match.suffix();
+                format(ctx, std::forward<const args&>(tail)...);
+
+                return;
+            }
+
+            ctx.out.append_block(ctx.tstr);
+        }
+
+        blueprint_type blueprint_;
     };
 }

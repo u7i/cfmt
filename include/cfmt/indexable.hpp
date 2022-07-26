@@ -14,9 +14,7 @@ namespace cfmt {
 
     /** Checks if 2 type are compatible as indexable. */
     template <class T, class U>
-    concept CompatibleIndexable = requires(T a, U b) {
-        Indexable<T>;
-        Indexable<U>;
+    concept CompatibleIndexable = Indexable<T> && Indexable<U> && requires(T a, U b) {
         a[0] == b[0];
     };
 
