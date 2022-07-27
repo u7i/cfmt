@@ -57,24 +57,14 @@ namespace cfmt {
             auto match = blueprint_.extract(ctx.tstr);
 
             if (match.valid()) {
-                if (match.anonymous())
+                if (match.anonymous() || !try_use_cached(match, ctx))
                     throw std::out_of_range("Not enough args given");
-
-                auto cached = ctx.cache.find(match.id());
-                if (!cached)
-                    throw std::out_of_range("Not enough args given");
-
-                ctx.out.append_block(match.prefix());
-                ctx.out.append_block(cached.value());
-
-                ctx.tstr = match.suffix();
 
                 format(ctx);
-                return;
             }
-
-            if (!ctx.tstr.empty())
-                ctx.out.append_block(ctx.tstr);
+            else {
+                use_rest(ctx);
+            }
         }
 
         template <typename T, typename... args>
@@ -82,36 +72,56 @@ namespace cfmt {
             auto match = blueprint_.extract(ctx.tstr);
 
             if (match.valid()) {
-                ctx.out.append_block(match.prefix());
-
                 if (match.anonymous()) {
-                    ctx.out.append_value(val);
+                    use_value(match, val, ctx);
+                    format(ctx, std::forward<const args&>(tail)...);
+                }
+                else if (try_use_cached(match, ctx)) {
+                    format(ctx, val, std::forward<const args &>(tail)...);
                 }
                 else {
-                    auto cached = ctx.cache.find(match.id());
-
-                    if (cached) {
-                        ctx.out.append_block(cached.value());
-
-                        ctx.tstr = match.suffix();
-                        format(ctx, std::forward<const T&>(val), std::forward<const args&>(tail)...);
-
-                        return;
-                    }
-                    else {
-                        const auto old = ctx.out.length();
-                        ctx.out.append_value(val);
-                        ctx.cache.push(match.id(), view_type { old, ctx.out.length() - old, ctx.out });
-                    }
+                    use_named_value(match, val, ctx);
+                    format(ctx, std::forward<const args&>(tail)...);
                 }
-
-                ctx.tstr = match.suffix();
-                format(ctx, std::forward<const args&>(tail)...);
-
-                return;
             }
+            else {
+                use_rest(ctx);
+            }
+        }
 
-            ctx.out.append_block(ctx.tstr);
+        [[nodiscard]] auto try_use_cached(const group::match<string>& match, context& ctx) const -> bool
+        {
+            auto cached = ctx.cache.find(match.id());
+            if (!cached)
+                return false;
+
+            ctx.out.append_block(match.prefix());
+            ctx.out.append_block(cached.value());
+
+            ctx.tstr = match.suffix();
+            return true;
+        }
+
+        void use_value(const group::match<string>& match, const auto& value, context& ctx) const {
+            ctx.out.append_block(match.prefix());
+            ctx.out.append_value(value);
+
+            ctx.tstr = match.suffix();
+        }
+
+        void use_named_value(const group::match<string>& match, const auto& value, context& ctx) const {
+            ctx.out.append_block(match.prefix());
+
+            const auto old = ctx.out.length();
+            ctx.out.append_value(value);
+            ctx.cache.push(match.id(), view_type { old, ctx.out.length() - old, ctx.out });
+
+            ctx.tstr = match.suffix();
+        }
+
+        void use_rest(context& ctx) const {
+            if (!ctx.tstr.empty())
+                ctx.out.append_block(ctx.tstr);
         }
 
         blueprint_type blueprint_;

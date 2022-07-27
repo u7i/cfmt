@@ -25,9 +25,3 @@ auto string = cfmt::wformat(L"{}", 123.f); /// std::wstring { L"123" }
 
 ### String
 To use your string class in a formatter it must satisfy **String** concept.
-
-### TODO
-- Write custom __optional__ class ( with builtin reference support ). 
-    - Fix group/cache.
-- Rewrite formatting algorithm.
-- Decrease code amount. 

@@ -16,8 +16,7 @@ namespace cfmt {
             universal_string() = default;
             universal_string(const auto& val = {}) : str_(val) {}
 
-            template<typename T> requires Indexable<T>
-            void append_block(const T& view) {
+            void append_block(const Indexable auto& view) {
                 const size_t new_blk = str_.length();
                 str_.resize(str_.length() + view.length());
 
@@ -29,10 +28,10 @@ namespace cfmt {
                 str_ += (stream_t{} << val).str();
             }
 
-            [[nodiscard]] size_t   length()  const noexcept { return str_.length(); }
-            [[nodiscard]] string_t wrapped() const noexcept { return str_; }
+            [[nodiscard]] auto length()  const noexcept -> size_type { return str_.length(); }
+            [[nodiscard]] auto wrapped() const noexcept -> string_t  { return str_; }
 
-            [[nodiscard]] auto operator[](size_t i) const { return str_[i]; }
+            [[nodiscard]] auto operator[](size_t i) const -> value_type { return str_[i]; }
         private:
             string_t str_;
         };

@@ -27,9 +27,9 @@ namespace cfmt::group {
         [[nodiscard]] auto valid()     const noexcept -> bool { return data_.has_value(); }
         [[nodiscard]] auto anonymous() const          -> bool { return safe_data().id.empty(); }
 
-        [[nodiscard]] auto prefix()    const -> view_type { return safe_data().prefix; }
-        [[nodiscard]] auto suffix()    const -> view_type { return safe_data().suffix; }
-        [[nodiscard]] auto id()        const -> view_type { return safe_data(!anonymous()).id; }
+        [[nodiscard]] auto prefix()    const -> const_reference { return safe_data().prefix; }
+        [[nodiscard]] auto suffix()    const -> const_reference { return safe_data().suffix; }
+        [[nodiscard]] auto id()        const -> const_reference { return safe_data(!anonymous()).id; }
 
     private:
         const auto& safe_data(bool additional_cond = true) const {
