@@ -2,6 +2,8 @@
 #pragma once
 
 #include "cfmt/view.hpp"
+
+#include <functional>
 #include <vector>
 
 namespace cfmt::group {
